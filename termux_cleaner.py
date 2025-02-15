@@ -2,29 +2,30 @@ import os
 import shutil
 import subprocess
 
-# لیست دایرکتوری‌هایی که باید پاک شوند
+# لیست مسیرهای کش برای پاک‌سازی
 cache_dirs = [
     "/data/data/com.termux/cache/",
-    "/data/data/com.android.chrome/cache/",
-    "/data/data/com.instagram.android/cache/",
-    "/data/data/com.whatsapp/cache/",
-    "/data/data/com.facebook.katana/cache/",
-    "/data/data/com.android.vending/cache/",
-    "/data/data/com.google.android.youtube/cache/",
     "/storage/emulated/0/Android/data/com.android.chrome/cache/",
     "/storage/emulated/0/Android/data/com.instagram.android/cache/",
     "/storage/emulated/0/Android/data/com.whatsapp/cache/",
     "/storage/emulated/0/Android/data/com.facebook.katana/cache/",
-    "/storage/emulated/0/Android/data/com.google.android.youtube/cache/"
-]
-
-# لیست فایل‌های موقت
-temp_dirs = [
-    "/data/local/tmp/",
+    "/storage/emulated/0/Android/data/com.google.android.youtube/cache/",
     "/storage/emulated/0/DCIM/.thumbnails/",
     "/storage/emulated/0/Download/.tmp/",
     "/storage/emulated/0/Android/data/com.android.gallery3d/cache/"
 ]
+
+# بررسی و نصب پیش‌نیازها
+def install_requirements():
+    print("[⚡] بررسی و نصب پیش‌نیازهای Termux...")
+
+    # بررسی نصب بودن پایتون
+    if not shutil.which("python"):
+        os.system("pkg install python -y")
+
+    # بررسی نصب بودن termux-api
+    if not shutil.which("termux-battery-status"):
+        os.system("pkg install termux-api -y")
 
 # تابع حذف دایرکتوری‌ها
 def clean_directory(path):
@@ -34,28 +35,39 @@ def clean_directory(path):
             print(f"[✅] حذف شد: {path}")
         except Exception as e:
             print(f"[❌] خطا در حذف {path}: {e}")
-    else:
-        print(f"[⚡] یافت نشد: {path}")
 
-# تابع نصب پیش‌نیازها
-def install_requirements():
-    print("[⚡] در حال نصب پیش‌نیازهای Termux...")
-    os.system("pkg update -y && pkg upgrade -y")
-    os.system("pkg install python -y")
-    os.system("pkg install termux-api -y")
+# آزادسازی فضای ذخیره‌سازی
+def free_storage():
+    print("[⚡] در حال حذف فایل‌های بیهوده سیستم...")
+    os.system("rm -rf /storage/emulated/0/Android/data/*/cache/")
+    os.system("rm -rf /storage/emulated/0/Android/data/*/files/.thumbnails/")
+    os.system("rm -rf /storage/emulated/0/Download/*.log")
+    os.system("rm -rf /storage/emulated/0/Pictures/*.tmp")
 
-# تابع آزادسازی حافظه رم
-def free_memory():
-    print("[⚡] در حال آزادسازی حافظه رم...")
-    os.system("sync; echo 3 > /proc/sys/vm/drop_caches")
+# پاک‌سازی فایل‌های بی‌استفاده ترمیکس
+def clean_termux():
+    print("[⚡] پاک‌سازی کش و لاگ‌های Termux...")
+    os.system("rm -rf $HOME/.cache/")
+    os.system("rm -rf $HOME/.termux/boot/")
+    os.system("rm -rf $HOME/.termux/tasker/")
+    os.system("rm -rf $HOME/.termux/config")
+    
+# نمایش وضعیت باتری برای بررسی سلامت دستگاه
+def check_battery():
+    print("[⚡] در حال بررسی وضعیت باتری...")
+    os.system("termux-battery-status")
 
-# اجرای تمیزکاری
+# اجرای فرآیند پاک‌سازی
 def clean_system():
     print("\n🚀 شروع پاک‌سازی کش و فایل‌های اضافی...\n")
-    for directory in cache_dirs + temp_dirs:
+    
+    for directory in cache_dirs:
         clean_directory(directory)
 
-    free_memory()
+    free_storage()
+    clean_termux()
+    check_battery()
+
     print("\n✅ پاک‌سازی کامل شد! گوشی شما اکنون سریع‌تر است.\n")
 
 # اجرای اسکریپت

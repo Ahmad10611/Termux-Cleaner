@@ -1,69 +1,96 @@
 import os
 import shutil
+import subprocess
 
-# List of cache directories to clean
-CACHE_DIRS = [
+# لیست مسیرهای کش برای پاک‌سازی
+cache_dirs = [
     "/data/data/com.termux/cache/",
-    "/storage/emulated/0/Android/data/com.android.chrome/cache/",
-    "/storage/emulated/0/Android/data/com.instagram.android/cache/",
-    "/storage/emulated/0/Android/data/com.whatsapp/cache/",
-    "/storage/emulated/0/Android/data/com.facebook.katana/cache/",
-    "/storage/emulated/0/Android/data/com.google.android.youtube/cache/",
+    "/storage/emulated/0/Android/data/*/cache/",
+    "/storage/emulated/0/Android/data/*/files/.thumbnails/",
     "/storage/emulated/0/DCIM/.thumbnails/",
     "/storage/emulated/0/Download/.tmp/",
-    "/storage/emulated/0/Android/data/com.android.gallery3d/cache/"
+    "/storage/emulated/0/Pictures/.thumbnails/",
+    "/storage/emulated/0/Android/data/com.android.gallery3d/cache/",
+    "/storage/emulated/0/MIUI/debug_log/",
+    "/storage/emulated/0/tencent/MicroMsg/xlog/",
+    "/storage/emulated/0/tencent/MicroMsg/cache/",
+    "/storage/emulated/0/LOST.DIR/",
+    "/storage/emulated/0/.trash/",
 ]
 
-# Function to install required packages only if missing
+# لیست فایل‌های بزرگ و لاگ‌های سیستمی که باید حذف شوند
+large_files = [
+    "/storage/emulated/0/Download/*.log",
+    "/storage/emulated/0/*.tmp",
+    "/storage/emulated/0/*.bak",
+    "/storage/emulated/0/*.old",
+    "/storage/emulated/0/*.dmp",
+    "/storage/emulated/0/*.apk",
+    "/storage/emulated/0/Android/data/*/cache/*.log"
+]
+
+# بررسی و نصب پیش‌نیازها
 def install_requirements():
-    print("[⚡] Checking and installing required packages...")
+    print("[⚡] بررسی و نصب پیش‌نیازهای Termux...")
 
-    # Check and install Python
-    if not shutil.which("python"):
-        os.system("pkg install python -y")
-
-    # Check and install Termux API
-    if not shutil.which("termux-info"):
+    # بررسی نصب بودن termux-api
+    if not shutil.which("termux-battery-status"):
         os.system("pkg install termux-api -y")
 
-# Function to clean directories
+# تابع حذف دایرکتوری‌ها
 def clean_directory(path):
     if os.path.exists(path):
         try:
             shutil.rmtree(path)
-            print(f"[✅] Deleted: {path}")
+            print(f"[✅] حذف شد: {path}")
         except Exception as e:
-            print(f"[❌] Error deleting {path}: {e}")
+            print(f"[❌] خطا در حذف {path}: {e}")
 
-# Function to free up storage
+# تابع حذف فایل‌های بزرگ غیرضروری
+def clean_large_files():
+    print("[⚡] حذف فایل‌های بزرگ و بی‌استفاده...")
+    for file_pattern in large_files:
+        os.system(f"rm -rf {file_pattern}")
+
+# آزادسازی فضای ذخیره‌سازی
 def free_storage():
-    print("[⚡] Removing unnecessary system files...")
+    print("[⚡] در حال حذف فایل‌های بیهوده سیستم...")
     os.system("rm -rf /storage/emulated/0/Android/data/*/cache/")
     os.system("rm -rf /storage/emulated/0/Android/data/*/files/.thumbnails/")
     os.system("rm -rf /storage/emulated/0/Download/*.log")
-    os.system("rm -rf /storage/emulated/0/Pictures/*.tmp")
+    os.system("rm -rf /storage/emulated/0/*.tmp")
 
-# Function to clean Termux cache and logs
+# پاک‌سازی فایل‌های بی‌استفاده ترمیکس
 def clean_termux():
-    print("[⚡] Cleaning Termux cache and logs...")
+    print("[⚡] پاک‌سازی کش و لاگ‌های Termux...")
     os.system("rm -rf $HOME/.cache/")
     os.system("rm -rf $HOME/.termux/boot/")
     os.system("rm -rf $HOME/.termux/tasker/")
     os.system("rm -rf $HOME/.termux/config")
 
-# Main function to execute cleaning process
+# نمایش فضای خالی و وضعیت حافظه داخلی
+def check_storage():
+    print("\n📊 وضعیت فضای ذخیره‌سازی قبل از پاک‌سازی:")
+    os.system("df -h /storage/emulated/0")
+
+# اجرای فرآیند پاک‌سازی
 def clean_system():
-    print("\n🚀 Starting system cleaning...\n")
-    
-    for directory in CACHE_DIRS:
+    print("\n🚀 شروع پاک‌سازی کش و فایل‌های اضافی...\n")
+
+    check_storage()
+
+    for directory in cache_dirs:
         clean_directory(directory)
 
+    clean_large_files()
     free_storage()
     clean_termux()
 
-    print("\n✅ Cleaning completed! Your phone is now faster.\n")
+    print("\n✅ پاک‌سازی کامل شد! گوشی شما اکنون سریع‌تر است.\n")
 
-# Run script
+    check_storage()
+
+# اجرای اسکریپت
 if __name__ == "__main__":
     install_requirements()
     clean_system()

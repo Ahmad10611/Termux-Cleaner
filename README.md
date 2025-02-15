@@ -7,7 +7,7 @@
 1. **نصب Git و کلون کردن پروژه**:
    ```sh
    pkg install git -y
-   git clone https://github.com/نام-کاربری-شما/Termux-Cleaner.git
+   git clone https://github.com/Ahmad10611/Termux-Cleaner.git
    cd Termux-Cleaner
    ```
 
